@@ -2,12 +2,15 @@
 # encoding: utf-8
 # vim: encoding=utf-8
 
-
 from collections import defaultdict
+
 from nltk.probability import FreqDist
+from pylab import array, dtype, zeros_like
 
 from helpers import extremely_normalize, substrings
-from difference_classifier import DifferenceClassifier
+from classifiers import (
+    DifferenceClassifier, DictionaryClassifier, OrClassifier,
+)
 
 
 def get_unique_tokens(filename):
@@ -15,6 +18,24 @@ def get_unique_tokens(filename):
         return set([
             line.lower().strip() for line in f.xreadlines()
         ])
+
+
+def mini_evaluation(goldstandard_words, classifier, epsilon=0.01):
+    true_positives = 0
+    false_negatives = 0
+    total = len(goldstandard_words)
+
+    for (token, is_gene) in goldstandard_words:
+        classification = classifier.classify_token(token) > epsilon
+        if classification and is_gene:
+            true_positives += 1
+        if not classification and not is_gene:
+            false_negatives += 1
+
+    precision = true_positives / float(total)
+    recall = true_positives / float(true_positives + false_negatives)
+    f_measure = 2 * precision * recall / (precision + recall)
+    return precision, recall, f_measure
 
 
 def solution():
@@ -37,7 +58,7 @@ def solution():
                 continue
 
             left, right = content
-            if left in stopwords:
+            if False:  # left in stopwords:
                 continue
 
             right = right.strip() != "O"
@@ -67,13 +88,24 @@ def solution():
 
         difference[substr] = v1 / size1 - v2 / size2
 
-    classifier = DifferenceClassifier(difference)
+    r = xrange(-10, 10 + 1)
+    A = array([array(r), zeros_like(r)])
+    A.dtype = dtype('float32')
 
-    # vergleiche classifier gegen goldstandard_words
-    for (token, is_gene) in goldstandard_words:
-        result = classifier.classify_token(token)
-        if is_gene != result:
-            print token
+    for (i, e) in enumerate(xrange(-10, 10 + 1)):
+        if e != 0:
+            epsilon = 0.2 / e
+            print "epsilon = ", epsilon
+            klassi = OrClassifier([
+                DictionaryClassifier(given_genes, stopwords),
+                DifferenceClassifier(difference),
+            ])
+
+            precision, recall, f_measure = mini_evaluation(
+                goldstandard_words, klassi, epsilon
+            )
+            A[0, i] = epsilon
+            A[1, i] = f_measure
 
 
 if __name__ == '__main__':
