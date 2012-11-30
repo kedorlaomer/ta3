@@ -2,7 +2,7 @@
 # vim: encoding=utf-8
 
 from helpers import substrings
-
+import re
 
 class BaseClassifier:
     def classify_token(self, token):
@@ -63,3 +63,51 @@ class OrClassifier(BaseClassifier):
         return sum([
             classifier.classify_token(token) for classifier in self._classifiers
         ])
+
+
+class RegExpClassifier(BaseClassifier):
+    
+    #def __init__(self)
+
+    def classify_token(self,token):
+        p1 = re.compile('([?\w]+|[?\W])[A-Z]')
+        p2 = re.compile('([\w]+([\W]+[\w]*)+)|([\w]*([\W]+[\w]+)+)')
+        p3 = re.compile('([\D]+([\d]+[\D]*)+)|([\D]*([\d]+[\D]+)+)')
+        tokenScore = 0
+        if (p1.match(token)!=None):
+            tokenScore +=1
+        if (p2.match(token)!=None):
+            tokenScore +=1
+        if (p3.match(token)!=None):
+            tokenScore +=1
+        return tokenScore
+
+
+class NeighborClassifier(BaseClassifier):
+    _relevantNeighbors = None
+
+    def __init__(self,relevantNeighbors):
+        self._relevantNeighbors = relevantNeighbors
+
+
+    def classify_token(self,tokenNeighborhood):
+        tokenScore = 0
+        for neighbor in tokenNeighborhood:
+            if neighbor in self._relevantNeighbors:
+                tokenScore += 1
+        return tokenScore
+
+# class TopologyClassifier(BaseClassifier):
+#     _neighborhoodTopology = None
+
+#     def __init__(self,neighborhoodTopology)
+#         self._neighborhoodTopology = neighborhoodTopology
+
+
+#     def classify_token(self,tokenNeighborhood):
+#         tokenScore = 0
+#         for neighbor in tokenNeighborhood:
+#             if neighbor in self._relevantNeighbors:
+#                 tokenScore += 1
+#         return tokenScore
+

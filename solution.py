@@ -9,7 +9,7 @@ from pylab import array, dtype, zeros_like
 
 from helpers import extremely_normalize, substrings
 from classifiers import (
-    DifferenceClassifier, DictionaryClassifier, OrClassifier,
+    DifferenceClassifier, DictionaryClassifier, OrClassifier, RegExpClassifier, NeighborClassifier
 )
 
 
@@ -50,6 +50,7 @@ def solution():
     # goldstandard.iob ein Gen ist.
 
     goldstandard_words = []
+    regexClassi = RegExpClassifier()
     with open("goldstandard.iob") as f:
         for line in f.xreadlines():
 
@@ -58,12 +59,17 @@ def solution():
                 continue
 
             left, right = content
-            if False:  # left in stopwords:
-                continue
+            # if False:  # left in stopwords:
+            #     continue
 
             right = right.strip() != "O"
+            if regexClassi.classify_token(left) > 0:
+                print left + '\t' +str(right)
+            elif str(right) == "B-protein":
+                print '\t \t forgot this: '+left
+                #guardar en una lista las que cumplen el patron pero no son B-prot
             goldstandard_words.append((extremely_normalize(left), right))
-
+    print '#################### end of RegExpClassifier ################'
     # diese FreqDists enthalten die von Gene bzw. nicht-Gene
     # typischen Substrings
     gene_substrings = FreqDist()
@@ -92,20 +98,20 @@ def solution():
     A = array([array(r), zeros_like(r)])
     A.dtype = dtype('float32')
 
-    for (i, e) in enumerate(xrange(-10, 10 + 1)):
-        if e != 0:
-            epsilon = 0.2 / e
-            print "epsilon = ", epsilon
-            klassi = OrClassifier([
-                DictionaryClassifier(given_genes, stopwords),
-                DifferenceClassifier(difference),
-            ])
+    # for (i, e) in enumerate(xrange(-10, 10 + 1)):
+    #     if e != 0:
+    #         epsilon = 0.2 / e
+    #         print "epsilon = ", epsilon
+    #         klassi = OrClassifier([
+    #             DictionaryClassifier(given_genes, stopwords),
+    #             DifferenceClassifier(difference),
+    #         ])
 
-            precision, recall, f_measure = mini_evaluation(
-                goldstandard_words, klassi, epsilon
-            )
-            A[0, i] = epsilon
-            A[1, i] = f_measure
+    #         precision, recall, f_measure = mini_evaluation(
+    #             goldstandard_words, klassi, epsilon
+    #         )
+    #         A[0, i] = epsilon
+    #         A[1, i] = f_measure
 
 
 if __name__ == '__main__':
