@@ -10,6 +10,7 @@ from pylab import array, dtype, zeros_like
 from helpers import extremely_normalize, substrings
 from classifiers import (
     DifferenceClassifier, DictionaryClassifier, OrClassifier,
+    GoldBasedClassifier,
 )
 
 
@@ -22,17 +23,21 @@ def get_unique_tokens(filename):
 
 def mini_evaluation(goldstandard_words, classifier, epsilon=0.01):
     true_positives = 0
+    false_positives = 0
     false_negatives = 0
-    total = len(goldstandard_words)
 
     for (token, is_gene) in goldstandard_words:
         classification = classifier.classify_token(token) > epsilon
-        if classification and is_gene:
-            true_positives += 1
-        if not classification and not is_gene:
+        if classification:
+            if is_gene:
+                true_positives += 1
+            else:
+                false_positives += 1
+        elif is_gene:
             false_negatives += 1
 
-    precision = true_positives / float(total)
+    print true_positives, false_positives, false_negatives
+    precision = true_positives / float(true_positives + false_positives)
     recall = true_positives / float(true_positives + false_negatives)
     f_measure = 2 * precision * recall / (precision + recall)
     return precision, recall, f_measure
@@ -50,6 +55,7 @@ def solution():
     # goldstandard.iob ein Gen ist.
 
     goldstandard_words = []
+    goldgens = []
     with open("goldstandard.iob") as f:
         for line in f.xreadlines():
 
@@ -58,11 +64,22 @@ def solution():
                 continue
 
             left, right = content
-            if False:  # left in stopwords:
+            if left in stopwords:
                 continue
 
             right = right.strip() != "O"
             goldstandard_words.append((extremely_normalize(left), right))
+            if right:
+                goldgens.append(left)
+
+    classifier = GoldBasedClassifier(
+        goldgens=goldgens,
+        stopwords=stopwords,
+        normform_search=True,
+        baseform_search=False,
+    )
+    print mini_evaluation(goldstandard_words, classifier, 0.49)
+    return
 
     # diese FreqDists enthalten die von Gene bzw. nicht-Gene
     # typischen Substrings
@@ -88,24 +105,24 @@ def solution():
 
         difference[substr] = v1 / size1 - v2 / size2
 
-    r = xrange(-10, 10 + 1)
-    A = array([array(r), zeros_like(r)])
-    A.dtype = dtype('float32')
+    # r = xrange(1, 11)
+    # A = array([array(r), zeros_like(r)])
+    # A.dtype = dtype('float32')
 
-    for (i, e) in enumerate(xrange(-10, 10 + 1)):
-        if e != 0:
-            epsilon = 0.2 / e
-            print "epsilon = ", epsilon
-            klassi = OrClassifier([
-                DictionaryClassifier(given_genes, stopwords),
-                DifferenceClassifier(difference),
-            ])
+    for (i, e) in enumerate(xrange(1, 11)):
+        epsilon = 0.1 * e
+        print "epsilon = ", epsilon
+        klassi = OrClassifier([
+            DictionaryClassifier(given_genes, stopwords),
+            DifferenceClassifier(difference),
+        ])
 
-            precision, recall, f_measure = mini_evaluation(
-                goldstandard_words, klassi, epsilon
-            )
-            A[0, i] = epsilon
-            A[1, i] = f_measure
+        precision, recall, f_measure = mini_evaluation(
+            goldstandard_words, klassi, epsilon
+        )
+        print precision, recall, f_measure
+        # A[0, i] = epsilon
+        # A[1, i] = f_measure
 
 
 if __name__ == '__main__':

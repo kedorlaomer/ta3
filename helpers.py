@@ -26,16 +26,11 @@ def extremely_normalize(token):
 # Findet alle Substrings eines Wortes. Dabei wird „x“ auf „^x$“
 # abgebildet, um Wortanfang und -ende zu berücksichtigen
 def substrings(token):
-    token = "^" + token + "$"
-    rv = []
-    for i in xrange(0, len(token)):
-        for j in xrange(i + 1, len(token) + 1):
-            rv.append(token[i:j])
-    return rv
+    return list(set(xsubstrings(token)))
 
 
 def xsubstrings(token):
-    token = "^" + token + "$"
+    # token = "^%s$" % token
     for i in xrange(0, len(token)):
         for j in xrange(i + 1, len(token) + 1):
             yield token[i:j]
