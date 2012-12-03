@@ -1,9 +1,10 @@
 # encoding: utf-8
 # vim: encoding=utf-8
 
-from helpers import substrings, substringsByLength
 import re
-import nltk
+
+from helpers import substrings, substringsByLength
+
 
 class BaseClassifier:
     def classify_token(self, token):
@@ -37,7 +38,6 @@ class DictionaryClassifier(BaseClassifier):
         self._stopwords = stopwords
 
     def classify_token(self, token):
-        
         if token in self._dictionary:
             if token in self._stopwords:
                 return 0.5
@@ -48,6 +48,7 @@ class DictionaryClassifier(BaseClassifier):
                 return -10
             else:
                 return 0.5
+
 
 class OrClassifier(BaseClassifier):
     _classifiers = None
@@ -67,17 +68,19 @@ class OrClassifier(BaseClassifier):
 
 
 class RegExpClassifier(BaseClassifier):
-    
-    def classify_token(self,token):
-        p1 = re.compile('([\w]+|[\W]+)[A-Z]') # großbuchstabe nicht am anfang
-        p2 = re.compile('([\w]*[a-zA-Z]+[\w]*[\W]+)|(([\w]*[\W]+[\w]*)+[a-zA-Z]+)') # Zeichen im Wort
-        p3 = re.compile('([\D]*[a-zA-Z]+[\D]*[\d]+)|(([\D]*[\d]+[\D]*)+[a-zA-Z]+)') # Zahl im Wort
+    def classify_token(self, token):
+        # großbuchstabe nicht am anfang
+        p1 = re.compile(r'([\w]+|[\W]+)[A-Z]')
+        # Zeichen im Wort
+        p2 = re.compile(r'([\w]*[a-zA-Z]+[\w]*[\W]+)|(([\w]*[\W]+[\w]*)+[a-zA-Z]+)')
+        # Zahl im Wort
+        p3 = re.compile(r'([\D]*[a-zA-Z]+[\D]*[\d]+)|(([\D]*[\d]+[\D]*)+[a-zA-Z]+)')
         tokenScore = 0
-        if (p1.match(token)!=None):
+        if p1.match(token):
             tokenScore = 3
-        if (p2.match(token)!=None):
+        if p2.match(token):
             tokenScore = 3
-        if (p3.match(token)!=None):
+        if p3.match(token):
             tokenScore = 3
         return tokenScore
 
@@ -88,54 +91,53 @@ class RegExpGenClassifier(BaseClassifier):
     def __init__(self, notGenes):
         self._notGenes = notGenes
 
-    def classify_token(self,token):
+    def classify_token(self, token):
         if token in self._notGenes:
-            print "tokenclassifier: "+token+" out because in bad dictionary"
-            return 0;
+            print "tokenclassifier: %s out because in bad dictionary" % token
+            return 0
 
         #TODO: doesn't match '3rd' but should
-        p1 = re.compile('([\w+]|[\W*])+[A-Z]')
-        p2 = re.compile('([\w]+([\W]+[\w]*)+)|([\w]*([\W]+[\w]+)+)')
-        p3 = re.compile('([\D]+([\d]+[\D]*)+)|([\D]*([\d]+[\D]+)+)')
+        p1 = re.compile(r'([\w+]|[\W*])+[A-Z]')
+        p2 = re.compile(r'([\w]+([\W]+[\w]*)+)|([\w]*([\W]+[\w]+)+)')
+        p3 = re.compile(r'([\D]+([\d]+[\D]*)+)|([\D]*([\d]+[\D]+)+)')
         tokenScore = 0
-        if (p1.match(token)!=None):
+        if p1.match(token):
             tokenScore = 3
-        if (p2.match(token)!=None):
+        if p2.match(token):
             tokenScore = 3
-        if (p3.match(token)!=None):
+        if p3.match(token):
             tokenScore = 3
         return tokenScore
 
-#TODO: neighbors are not correctly implemented
+
+# TODO: neighbors are not correctly implemented
 class NeighborClassifier(BaseClassifier):
     _relevantNeighbors = None
 
-    def __init__(self,relevantNeighbors):
+    def __init__(self, relevantNeighbors):
         self._relevantNeighbors = relevantNeighbors
 
-    def classify_token(self,token,tokenNeighborhood):
+    def classify_token(self, token, tokenNeighborhood):
         tokenScore = 0
         for neighbor in tokenNeighborhood:
             if (neighbor != token) and (neighbor in self._relevantNeighbors):
                 tokenScore += 1
         return tokenScore
 
-#TODO: class that matches the token with a given dictionary of suffixes
 
-class substringClassifier(BaseClassifier):
+#TODO: class that matches the token with a given dictionary of suffixes
+class SubstringClassifier(BaseClassifier):
     _commonSubstrings = set()
 
-    def __init__(self,commonSubstrings):
+    def __init__(self, commonSubstrings):
         self._commonSubstrings = commonSubstrings
 
     def classify_token(self, token):
         tokenScore = 0
         if token > 3:
-            substrings = substringsByLength(token,3)
+            substrings = substringsByLength(token, 3)
             for sbstr in substrings:
                 if sbstr not in self._commonSubstrings:
                     tokenScore = 3
+                    break
         return tokenScore
-
-
-

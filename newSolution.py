@@ -2,6 +2,7 @@
 # encoding: utf-8
 # vim: encoding=utf-8
 
+import sys
 from collections import defaultdict
 
 from helpers import sort_dict_by_value
@@ -9,7 +10,7 @@ from helpers import sort_dict_by_value
 from classifiers import (
     DifferenceClassifier, DictionaryClassifier, OrClassifier,
     RegExpClassifier, RegExpGenClassifier, NeighborClassifier,
-    substringClassifier
+    SubstringClassifier,
 )
 
 
@@ -20,9 +21,9 @@ def get_unique_tokens(filename):
         ])
 
 
-def solution():
-    stopwords = get_unique_tokens("english_stop_words.txt")
-    given_genes = get_unique_tokens("human-genenames.txt")
+def solution(input_file, output_file, stopwords_file, genes_file):
+    stopwords = get_unique_tokens(stopwords_file)
+    given_genes = get_unique_tokens(genes_file)
 
     # neighbors: Dictionary mit token, die länger als ein Zeichen sind als key und Anzahl von Erscheiningen als value.
     # Es werden die nicht stopwords gespeichert die in der Nähe von einem Protein vorkommen
@@ -33,7 +34,7 @@ def solution():
     regexClassi = RegExpClassifier()
     dictClassi = DictionaryClassifier(given_genes, stopwords)
 
-    with open("goldstandard.iob") as f:
+    with open(input_file) as f:
         for line in f.xreadlines():
             content = line.split("\t")
 
@@ -64,7 +65,7 @@ def solution():
     sentenceScores = defaultdict(int)
     sentence.clear()
     sentenceNr = 0
-    with open("goldstandard.iob") as f:
+    with open(input_file) as f:
         for line in f.xreadlines():
             content = line.split("\t")
 
@@ -84,8 +85,8 @@ def solution():
 
     sentenceNr = 0
     print len(sentenceScores)
-    with open("goldstandard.iob") as f:
-        with open("goldstandard.predict", "w") as w:
+    with open(input_file) as f:
+        with open(output_file, "w") as w:
             for line in f.xreadlines():
                 content = line.split("\t")
 
@@ -98,9 +99,10 @@ def solution():
                         regexClassi.classify_token(left)
                         and sentenceScores[sentenceNr] > 5
                     ):
-                        w.write("%s\tB-protein\n" % content[0])
+                        w.write("%s\tB-protein\n" % left)
                     else:
-                        w.write("%s\t%s" % content)
+                        print content
+                        w.write("%s\t%s" % tuple(content))
                 else:
                     w.write("\n")
 
@@ -108,4 +110,13 @@ def solution():
 
 
 if __name__ == '__main__':
-    solution()
+    if len(sys.argv) == 5:
+        solution(*sys.argv[1:])
+    else:
+        print """
+            Give this files:
+            1. input.iob
+            2. output.predict
+            3. stop.txt
+            4. genes.txt
+        """
