@@ -3,7 +3,7 @@
 
 import re
 
-from helpers import substrings, substringsByLength
+from helpers import substrings, substrings_by_length
 
 
 class BaseClassifier:
@@ -135,7 +135,7 @@ class SubstringClassifier(BaseClassifier):
     def classify_token(self, token):
         tokenScore = 0
         if token > 3:
-            substrings = substringsByLength(token, 3)
+            substrings = substrings_by_length(token, 3)
             for sbstr in substrings:
                 if sbstr not in self._commonSubstrings:
                     tokenScore = 3

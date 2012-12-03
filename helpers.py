@@ -36,12 +36,14 @@ def xsubstrings(token):
             yield token[i:j]
 
 
-def substringsByLength(token, length):
-    substrings = []
+def substrings_by_length(token, length):
+    return list(xsubstrings_by_length(token, length))
+
+
+def xsubstrings_by_length(token, length):
     if len(token) >= length:
         for i in xrange(0, len(token) - length + 1):
-            substrings.append(token[i: i + length])
-    return substrings
+            yield token[i: i + length]
 
 
 def sort_by_value(dictionary, sgn=None):
@@ -49,10 +51,10 @@ def sort_by_value(dictionary, sgn=None):
     return sorted(dictionary, lambda x, y: sgn(dictionary[x], dictionary[y]))
 
 
-def sort_dict_by_value(dictionary):
-    return sorted(dictionary, key=dictionary.get)
+def sort_dict_by_value(dictionary, reverse=False):
+    return sorted(dictionary, key=dictionary.get, reverse=reverse)
 
 
-def keysWithHighestValues(dictionary, ranking):
-    listOfKeys = sort_dict_by_value(dictionary)
-    return listOfKeys[-1:-(ranking + 1):-1]
+def get_keys_with_highest_values(dictionary, ranking):
+    listOfKeys = sort_dict_by_value(dictionary, reverse=True)
+    return listOfKeys[:ranking]

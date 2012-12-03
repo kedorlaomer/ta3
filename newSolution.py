@@ -45,20 +45,20 @@ def solution(input_file, output_file, stopwords_file, genes_file):
                         neighbors[word] += 1
                 sentence.clear()
                 sentenceFlag = False
-
             else:
                 left = content[0]
                 dictValue = dictClassi.classify_token(left.lower())
                 if dictValue > 1:
                     sentenceFlag = True
 
-                if (regexClassi.classify_token(left)):
+                if regexClassi.classify_token(left):
                     sentence.add(left)
-                elif (dictValue > 0) and (len(left) > 1) and (not left.isdigit()):
+                elif dictValue > 0 and len(left) > 1 and not left.isdigit():
                     sentence.add(left.lower())
+
     # we only want the 100 most seen neighbors as a list
     if len(neighbors) > 100:
-        neighbors = sort_dict_by_value(neighbors)[-1:-100:-1]
+        neighbors = sort_dict_by_value(neighbors, reverse=True)[:100]
     # for word in neighbors:
     #     print word
 
@@ -74,12 +74,11 @@ def solution(input_file, output_file, stopwords_file, genes_file):
                 score = len([x for x in sentence if x in neighbors])
                 sentenceScores[sentenceNr] = score
                 sentence.clear()
-
             else:
                 left = content[0]
-                if (regexClassi.classify_token(left)):
+                if regexClassi.classify_token(left):
                     sentence.add(left)
-                elif (dictValue > 0) and (len(left) > 1) and (not left.isdigit()):
+                elif dictValue > 0 and len(left) > 1 and not left.isdigit():
                     sentence.add(left.lower())
             sentenceNr += 1
 
@@ -95,13 +94,19 @@ def solution(input_file, output_file, stopwords_file, genes_file):
 
                     dictValue = dictClassi.classify_token(left.lower())
 
-                    if dictValue > 1 or (
-                        regexClassi.classify_token(left)
-                        and sentenceScores[sentenceNr] > 5
+                    if not (
+                        len(left) in [3]
+                        and left in [left.upper(), left.lower()]
+                    ) and (
+                        dictValue > 1
+                        or (
+                            regexClassi.classify_token(left)
+                            and sentenceScores[sentenceNr] > 5
+                        )
                     ):
                         w.write("%s\tB-protein\n" % left)
                     else:
-                        print content
+                        # print content
                         w.write("%s\t%s" % tuple(content))
                 else:
                     w.write("\n")
