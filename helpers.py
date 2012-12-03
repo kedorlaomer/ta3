@@ -40,6 +40,12 @@ def xsubstrings(token):
         for j in xrange(i + 1, len(token) + 1):
             yield token[i:j]
 
+def substringsByLength(token,length):
+    substrings = []
+    if len(token) >= length:
+        for i in xrange(0, len(token)-length+1):
+            substrings.append(token[i:i+length])
+    return substrings 
 
 def sort_by_value(dictionary, sgn=None):
     sgn = sgn if callable(sgn) else cmp
@@ -48,3 +54,9 @@ def sort_by_value(dictionary, sgn=None):
 
 def sort_dict_by_value(dictionary):
     return sorted(dictionary, key=dictionary.get)
+
+def keysWithHighestValues(dictionary,ranking):
+    listOfKeys = sort_dict_by_value(dictionary)
+    return listOfKeys[-1:-(ranking+1):-1]
+
+
