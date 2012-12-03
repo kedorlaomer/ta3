@@ -26,12 +26,7 @@ def extremely_normalize(token):
 # Findet alle Substrings eines Wortes. Dabei wird „x“ auf „^x$“
 # abgebildet, um Wortanfang und -ende zu berücksichtigen
 def substrings(token):
-    token = "^" + token + "$"
-    rv = []
-    for i in xrange(0, len(token)):
-        for j in xrange(i + 1, len(token) + 1):
-            rv.append(token[i:j])
-    return rv
+    return list(xsubstrings(token))
 
 
 def xsubstrings(token):
@@ -40,12 +35,14 @@ def xsubstrings(token):
         for j in xrange(i + 1, len(token) + 1):
             yield token[i:j]
 
-def substringsByLength(token,length):
+
+def substringsByLength(token, length):
     substrings = []
     if len(token) >= length:
-        for i in xrange(0, len(token)-length+1):
-            substrings.append(token[i:i+length])
-    return substrings 
+        for i in xrange(0, len(token) - length + 1):
+            substrings.append(token[i: i + length])
+    return substrings
+
 
 def sort_by_value(dictionary, sgn=None):
     sgn = sgn if callable(sgn) else cmp
@@ -55,8 +52,7 @@ def sort_by_value(dictionary, sgn=None):
 def sort_dict_by_value(dictionary):
     return sorted(dictionary, key=dictionary.get)
 
-def keysWithHighestValues(dictionary,ranking):
+
+def keysWithHighestValues(dictionary, ranking):
     listOfKeys = sort_dict_by_value(dictionary)
-    return listOfKeys[-1:-(ranking+1):-1]
-
-
+    return listOfKeys[-1:-(ranking + 1):-1]
