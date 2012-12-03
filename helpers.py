@@ -1,6 +1,8 @@
 # encoding: utf-8
 # vim: encoding=utf-8
 
+from StringComparator import StringComparator
+
 
 # normalisiere sehr brutal: bis auf Buchstaben ist alles gleich;
 # Ziffern sind alle gleich; Groß- und Kleinschreibung wird
@@ -29,8 +31,9 @@ def substrings(token):
     return list(set(xsubstrings(token)))
 
 
-def xsubstrings(token):
-    # token = "^%s$" % token
+def xsubstrings(token, mark_token_borders=True):
+    if mark_token_borders:
+        token = "^%s$" % token
     for i in xrange(0, len(token)):
         for j in xrange(i + 1, len(token) + 1):
             yield token[i:j]

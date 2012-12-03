@@ -2,15 +2,16 @@
 # encoding: utf-8
 # vim: encoding=utf-8
 
+import sys
 from collections import defaultdict
 
 from nltk.probability import FreqDist
-from pylab import array, dtype, zeros_like
+# from pylab import array, dtype, zeros_like
 
 from helpers import extremely_normalize, substrings
 from classifiers import (
-    DifferenceClassifier, DictionaryClassifier, OrClassifier,
-    GoldBasedClassifier,
+    DifferenceClassifier, DictionaryClassifier, OrClassifier, RegExpClassifier,
+    NeighborClassifier, NormFormClassifier, WordRatioClassifier, NaiveClassifier,
 )
 
 
@@ -22,12 +23,11 @@ def get_unique_tokens(filename):
 
 
 def mini_evaluation(goldstandard_words, classifier, epsilon=0.01):
-    true_positives = 0
-    false_positives = 0
-    false_negatives = 0
+    true_positives = false_positives = false_negatives = 0
+    precision = recall = f_measure = 0
 
     for (token, is_gene) in goldstandard_words:
-        classification = classifier.classify_token(token) > epsilon
+        classification = classifier.classify_token(token) >= epsilon
         if classification:
             if is_gene:
                 true_positives += 1
@@ -36,16 +36,18 @@ def mini_evaluation(goldstandard_words, classifier, epsilon=0.01):
         elif is_gene:
             false_negatives += 1
 
+    if true_positives:
+        precision = true_positives / float(true_positives + false_positives)
+        recall = true_positives / float(true_positives + false_negatives)
+        f_measure = 2 * precision * recall / (precision + recall)
+
     print true_positives, false_positives, false_negatives
-    precision = true_positives / float(true_positives + false_positives)
-    recall = true_positives / float(true_positives + false_negatives)
-    f_measure = 2 * precision * recall / (precision + recall)
     return precision, recall, f_measure
 
 
-def solution():
-    stopwords = get_unique_tokens("english_stop_words.txt")
-    given_genes = get_unique_tokens("human-genenames.txt")
+def solution(input_file, output_file, stopwords_file, genes_file):
+    stopwords = get_unique_tokens(stopwords_file)
+    given_genes = get_unique_tokens(genes_file)
 
     # lies goldstandard.iob ein
 
@@ -56,6 +58,8 @@ def solution():
 
     goldstandard_words = []
     goldgens = []
+    regexClassi = RegExpClassifier()
+
     with open("goldstandard.iob") as f:
         for line in f.xreadlines():
 
@@ -64,21 +68,27 @@ def solution():
                 continue
 
             left, right = content
-            if left in stopwords:
-                continue
-
             right = right.strip() != "O"
-            goldstandard_words.append((extremely_normalize(left), right))
+            # if regexClassi.classify_token(left) > 0:
+            #     print "%s\t%s" % (left, right)
+            # elif str(right) == "B-protein":
+            #     print '\t \t forgot this: %s' % left
+                #guardar en una lista las que cumplen el patron pero no son B-prot
+            # goldstandard_words.append((extremely_normalize(left), right))
+            goldstandard_words.append((left, right))
             if right:
                 goldgens.append(left)
 
-    classifier = GoldBasedClassifier(
-        goldgens=goldgens,
-        stopwords=stopwords,
-        normform_search=True,
-        baseform_search=False,
-    )
-    print mini_evaluation(goldstandard_words, classifier, 0.49)
+    # classifier = NormFormClassifier(goldgens, stopwords)
+    # with open("my.predict", "w") as f:
+    #     for token, is_gene in goldstandard_words:
+    #         predict = classifier.classify_token(token)
+    #         f.write("%s\t%s\n" % (token, "B-protein" if predict else "O"))
+
+    # classifier = NaiveClassifier(stopwords=stopwords)
+    # print mini_evaluation(goldstandard_words, classifier, 1.0)
+    classifier = NormFormClassifier(goldgens=goldgens, stopwords=stopwords)
+    print mini_evaluation(goldstandard_words, classifier, 0.5)
     return
 
     # diese FreqDists enthalten die von Gene bzw. nicht-Gene
@@ -109,21 +119,29 @@ def solution():
     # A = array([array(r), zeros_like(r)])
     # A.dtype = dtype('float32')
 
-    for (i, e) in enumerate(xrange(1, 11)):
-        epsilon = 0.1 * e
-        print "epsilon = ", epsilon
-        klassi = OrClassifier([
-            DictionaryClassifier(given_genes, stopwords),
-            DifferenceClassifier(difference),
-        ])
+    # for (i, e) in enumerate(xrange(1, 11)):
+    #    epsilon = 0.1 * e
+    #         print "epsilon = ", epsilon
+    #         klassi = OrClassifier([
+    #             DictionaryClassifier(given_genes, stopwords),
+    #             DifferenceClassifier(difference),
+    #         ])
 
-        precision, recall, f_measure = mini_evaluation(
-            goldstandard_words, klassi, epsilon
-        )
-        print precision, recall, f_measure
-        # A[0, i] = epsilon
-        # A[1, i] = f_measure
+    #         precision, recall, f_measure = mini_evaluation(
+    #             goldstandard_words, klassi, epsilon
+    #         )
+    #         A[0, i] = epsilon
+    #         A[1, i] = f_measure
 
 
 if __name__ == '__main__':
-    solution()
+    if len(sys.argv) == 5:
+        solution(sys.argv)
+    else:
+        print """
+            Give this files:
+            1. input.iob
+            2. output.iob
+            3. stop.txt
+            4. genes.txt
+        """
