@@ -9,7 +9,8 @@ from pylab import array, dtype, zeros_like
 
 from helpers import extremely_normalize, substrings
 from classifiers import (
-    DifferenceClassifier, DictionaryClassifier, OrClassifier, RegExpClassifier, NeighborClassifier
+    DifferenceClassifier, DictionaryClassifier, OrClassifier, RegExpClassifier,
+    NeighborClassifier, BadStructureClassifier,
 )
 
 

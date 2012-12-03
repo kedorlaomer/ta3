@@ -110,6 +110,14 @@ class RegExpGenClassifier(BaseClassifier):
         return tokenScore
 
 
+class BadStructureClassifier(BaseClassifier):
+    def classify_token(self, token):
+        return not (
+            len(token) == 3
+            and token in [token.upper(), token.lower()]
+        )
+
+
 # TODO: neighbors are not correctly implemented
 class NeighborClassifier(BaseClassifier):
     _relevantNeighbors = None

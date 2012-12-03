@@ -10,7 +10,7 @@ from helpers import sort_dict_by_value
 from classifiers import (
     DifferenceClassifier, DictionaryClassifier, OrClassifier,
     RegExpClassifier, RegExpGenClassifier, NeighborClassifier,
-    SubstringClassifier,
+    SubstringClassifier, BadStructureClassifier,
 )
 
 
@@ -32,6 +32,7 @@ def solution(input_file, output_file, stopwords_file, genes_file):
     neighbors = defaultdict(int)
 
     regexClassi = RegExpClassifier()
+    badStructureClassi = BadStructureClassifier()
     dictClassi = DictionaryClassifier(given_genes, stopwords)
 
     with open(input_file) as f:
@@ -81,7 +82,7 @@ def solution(input_file, output_file, stopwords_file, genes_file):
             sentenceNr += 1
 
     sentenceNr = 0
-    print len(sentenceScores)
+    # print len(sentenceScores)
     with open(input_file) as f:
         with open(output_file, "w") as w:
             for line in f.xreadlines():
@@ -92,10 +93,7 @@ def solution(input_file, output_file, stopwords_file, genes_file):
 
                     dictValue = dictClassi.classify_token(token.lower())
 
-                    if not (
-                        len(token) in [3]
-                        and token in [token.upper(), token.lower()]
-                    ) and (
+                    if badStructureClassi.classify_token(token) and (
                         dictValue > 1
                         or (
                             regexClassi.classify_token(token)
@@ -104,8 +102,7 @@ def solution(input_file, output_file, stopwords_file, genes_file):
                     ):
                         w.write("%s\tB-protein\n" % token)
                     else:
-                        # print content
-                        w.write("%s\t%s" % tuple(content))
+                        w.write("%s\tO\n" % token)
                 else:
                     w.write("\n")
 
